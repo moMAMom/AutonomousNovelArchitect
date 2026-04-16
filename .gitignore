@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# 仮想環境
+.venv/
+venv/
+env/
+
+# 出力ディレクトリ（生成物）
+output/
+
+# ログ
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea/
+
+# 環境変数
+.env
+*.env
+
+# LM Studio / モデルキャッシュ
+*.gguf
+*.bin
