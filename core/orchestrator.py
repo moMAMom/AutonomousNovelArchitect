@@ -156,6 +156,8 @@ class Orchestrator(QObject):
         if world.get("atmosphere"):
             lines.append(f"世界観: {world['atmosphere']}")
         for ch in data.get("characters", []):
+            if not isinstance(ch, dict):
+                continue
             if "主人公" in ch.get("tags", []):
                 lines.append(
                     f"主人公: {ch['name']} / {ch.get('personality', '')} / 動機: {ch.get('motivation', '')}"
@@ -252,6 +254,9 @@ class Orchestrator(QObject):
         prev_draft: Optional[str] = None
         feedback: Optional[str] = None
 
+        log_dir = self._project_dir / "manuscript" / "logs"
+        log_dir.mkdir(parents=True, exist_ok=True)
+
         for attempt in range(1, cfg.max_retry_count + 2):
             if self._stop_requested:
                 break
@@ -275,6 +280,11 @@ class Orchestrator(QObject):
                 self.error_occurred.emit(f"Writer エラー: {exc}")
                 return
 
+            # ドラフトTXT保存
+            (log_dir / f"ch{chapter_id:02d}_draft_{attempt:02d}.txt").write_text(
+                draft_text, encoding="utf-8"
+            )
+
             # --- Critiquing ---
             self._progress.set_chapter_status(chapter_id, "critiquing")
             try:
@@ -289,6 +299,13 @@ class Orchestrator(QObject):
             self.score_updated.emit(score)
             draft_log.append(attempt=attempt, draft=draft_text, score=score, issues=issues)
             self._progress.set_attempt(attempt, score=score, best_index=attempt)
+
+            # 編集者評価TXT保存
+            critique_lines = [f"スコア: {score}/100", f"サマリー: {summary}", "", "改善点:"]
+            critique_lines += [f"- {issue}" for issue in issues]
+            (log_dir / f"ch{chapter_id:02d}_critique_{attempt:02d}.txt").write_text(
+                "\n".join(critique_lines), encoding="utf-8"
+            )
 
             if score >= cfg.score_threshold:
                 # 合格
@@ -320,6 +337,11 @@ class Orchestrator(QObject):
         except Exception as exc:
             self.error_occurred.emit(f"Proofreader エラー: {exc}")
             return
+
+        # 校閲後TXT保存
+        log_dir = self._project_dir / "manuscript" / "logs"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        (log_dir / f"ch{chapter_id:02d}_polished.txt").write_text(polished, encoding="utf-8")
 
         # 承認ゲート
         if cfg.chapter_approval_gate:

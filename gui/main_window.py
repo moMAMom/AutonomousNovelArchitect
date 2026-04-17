@@ -175,7 +175,9 @@ class MainWindow(QMainWindow):
     def _on_inception_done(self) -> None:
         self._role_label.setText("Inception 完了")
         self._refresh_project_panel()
-        self._log_panel.agent_log.log("System", "Bible・章プランを生成しました。▶ 実行で執筆を開始します。")
+        self._log_panel.agent_log.log("System", "Bible・章プランを生成しました。ノンストップモードで執筆を開始します。")
+        # ノンストップ: Inception 完了後に自動で第1章から実行開始
+        self._run()
 
     def _open_project(self) -> None:
         path = QFileDialog.getExistingDirectory(self, "プロジェクトフォルダを選択", str(_OUTPUT_DIR))
@@ -281,6 +283,24 @@ class MainWindow(QMainWindow):
     def _on_chapter_finished(self, chapter_id: int) -> None:
         self._log_panel.agent_log.log("System", f"第{chapter_id}章 完了")
         self._refresh_project_panel()
+        # ノンストップ: 次の未完了章を自動で実行
+        if self._orchestrator is None:
+            return
+        resume = self._orchestrator.resume()
+        chapters = self._orchestrator.bible.data.get("plot", {}).get("chapters", [])
+        statuses = resume.get("chapter_statuses", {})
+        next_ch = None
+        for ch in chapters:
+            cid = ch.get("id", 0)
+            if statuses.get(str(cid), "planned") != "final":
+                next_ch = cid
+                break
+        if next_ch is not None:
+            self._log_panel.agent_log.log("System", f"第{next_ch}章 自動開始（ノンストップ）")
+            self._start_chapter_worker(next_ch)
+        else:
+            self._role_label.setText("全章完成")
+            self._log_panel.agent_log.log("System", "すべての章が完成しました。")
 
     def _approve_chapter(self, chapter_id: int) -> None:
         if self._orchestrator:

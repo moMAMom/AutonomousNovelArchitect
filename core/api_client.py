@@ -39,7 +39,7 @@ class LMStudioClient:
         self,
         messages: List[Dict[str, str]],
         temperature: float = 0.7,
-        max_tokens: int = 12000,
+        max_tokens: int = 4096,
     ) -> str:
         """同期チャット。指数バックオフで最大 connection_retry_count 回リトライ。"""
         last_exc: Exception | None = None
@@ -57,7 +57,8 @@ class LMStudioClient:
                 wait = 2 ** attempt
                 time.sleep(wait)
             except openai.APIStatusError as exc:
-                raise RuntimeError(f"LM Studio API エラー: {exc.status_code} {exc.message}") from exc
+                body = getattr(exc, 'body', None) or exc.message
+                raise RuntimeError(f"LM Studio API エラー: {exc.status_code} — {body}") from exc
         raise RuntimeError(f"LM Studio への接続が {self._retry_count} 回失敗しました: {last_exc}") from last_exc
 
     # ------------------------------------------------------------------ chat (stream)
@@ -65,7 +66,7 @@ class LMStudioClient:
         self,
         messages: List[Dict[str, str]],
         temperature: float = 0.7,
-        max_tokens: int = 12000,
+        max_tokens: int = 4096,
     ) -> Generator[str, None, None]:
         """ストリーミングチャット。チャンク文字列をジェネレータで返す。"""
         last_exc: Exception | None = None
@@ -87,7 +88,8 @@ class LMStudioClient:
                 last_exc = exc
                 time.sleep(2 ** attempt)
             except openai.APIStatusError as exc:
-                raise RuntimeError(f"LM Studio API エラー: {exc.status_code} {exc.message}") from exc
+                body = getattr(exc, 'body', None) or exc.message
+                raise RuntimeError(f"LM Studio API エラー: {exc.status_code} — {body}") from exc
         raise RuntimeError(f"LM Studio への接続が {self._retry_count} 回失敗しました: {last_exc}") from last_exc
 
     # ------------------------------------------------------------------ JSON extraction
@@ -98,8 +100,9 @@ class LMStudioClient:
         max_tokens: int = 4096,
     ) -> Optional[Dict[str, Any]]:
         """JSON を要求し、パース失敗時は正規表現フォールバックを試みる。"""
-        # response_format による強制
+        # response_format は使わず本文からJSONを抽出（LM Studio互換性のため）
         last_exc: Exception | None = None
+        raw: str = ""
         for attempt in range(self._retry_count):
             try:
                 resp = self._client.chat.completions.create(
@@ -107,23 +110,22 @@ class LMStudioClient:
                     messages=messages,  # type: ignore[arg-type]
                     temperature=temperature,
                     max_tokens=max_tokens,
-                    response_format={"type": "json_object"},
                 )
                 raw = resp.choices[0].message.content or ""
-                return json.loads(raw)
-            except json.JSONDecodeError:
-                # フォールバック: 正規表現で最初の {...} ブロックを抽出
-                match = re.search(r"\{.*\}", raw, re.DOTALL)
-                if match:
-                    try:
+                try:
+                    return json.loads(raw)
+                except json.JSONDecodeError:
+                    match = re.search(r"\{.*\}", raw, re.DOTALL)
+                    if match:
                         return json.loads(match.group())
-                    except json.JSONDecodeError:
-                        pass
-                last_exc = ValueError(f"JSON パース失敗。生レスポンス: {raw[:200]}")
+                    raise ValueError(f"JSON パース失敗。生レスポンス: {raw[:300]}")
+            except (ValueError, json.JSONDecodeError) as exc:
+                last_exc = exc
                 time.sleep(2 ** attempt)
             except (openai.APIConnectionError, openai.APITimeoutError) as exc:
                 last_exc = exc
                 time.sleep(2 ** attempt)
             except openai.APIStatusError as exc:
-                raise RuntimeError(f"LM Studio API エラー: {exc.status_code} {exc.message}") from exc
+                body = getattr(exc, 'body', None) or exc.message
+                raise RuntimeError(f"LM Studio API エラー: {exc.status_code} — {body}") from exc
         raise RuntimeError(f"JSON チャット失敗: {last_exc}") from last_exc

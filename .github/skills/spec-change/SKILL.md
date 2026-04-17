@@ -1,6 +1,6 @@
 ---
 name: spec-change
-description: 'ANA プロジェクトの仕様を変更・更新するとき。Use when: 設計書・タスク管理表・AGENTS.md の内容を改訂したい、新機能や変更点を仕様に反映したい、ドキュメント間の整合性を確認・修正したい。Triggers: 仕様変更, 設計更新, 機能追加, AGENTS.md更新, タスク追加'
+description: 'ANA プロジェクトの仕様を変更・更新するとき。Use when: 設計書・タスク管理表・AGENTS.md の内容を改訂したい、新機能や変更点を仕様に反映したい、実装・各ドキュメント間の整合性を確認・修正したい。Triggers: 仕様変更, 設計更新, 機能追加, AGENTS.md更新, タスク追加'
 argument-hint: '変更の概要（例: "Guard エージェントに新しいメソッドを追加"）'
 ---
 

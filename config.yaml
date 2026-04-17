@@ -1,26 +1,19 @@
-# =============================================
-# Autonomous Novel Architect — 設定ファイル
-# =============================================
-
-# --- 執筆開始後ロック項目 ---
-model_id: "qwen3-9b-instruct"
+chapter_approval_gate: false
+connection_retry_count: 3
+lm_studio_url: http://localhost:1234/v1
 max_retry_count: 3
+model_id: nt_qwen3.5-9b
+request_timeout_sec: 800
 score_threshold: 80
 sliding_window_chapters: 3
 token_budgets:
-  system_prompt: 500
+  chapter_plan: 1000
+  direct_injection: 2000
+  editor_feedback: 500
   fixed_memory: 4000
+  output_reserve: 15000
+  prev_draft: 8000
+  safety_margin: 2536
   sliding_window: 20000
   summarized_memory: 3000
-  direct_injection: 2000
-  chapter_plan: 1000
-  prev_draft: 8000
-  editor_feedback: 500
-  output_reserve: 15000
-  safety_margin: 2536
-
-# --- 執筆中も変更可 ---
-chapter_approval_gate: false
-lm_studio_url: "http://localhost:1234/v1"
-request_timeout_sec: 800
-connection_retry_count: 3
+  system_prompt: 500

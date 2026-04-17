@@ -1,6 +1,7 @@
 # Autonomous Novel Architect (ANA) — タスク管理表
 
 **作成日:** 2026-04-16  
+**更新日:** 2026-04-17  
 **プロジェクトコード:** StoryMaker-ANA  
 **目標規模:** 中編小説生成システム（2〜10万字対応）
 
@@ -124,14 +125,16 @@
 
 | # | タスク | 実装ファイル | 詳細 | 優先 | 担当 | 状態 |
 |---|---|---|---|---|---|---|
-| F4-1 | `Orchestrator` 状態機械 | `core/orchestrator.py` | Phase遷移管理, `progress.json` 更新 | 高 | | ⬜ |
-| F4-2 | Inceptionフロー | `core/orchestrator.py` | キーワード → Writer(Inception役) → Bible生成 | 高 | | ⬜ |
-| F4-3 | Structuringフロー | `core/orchestrator.py` | Chapter Planning → Scene Breakdown | 高 | | ⬜ |
-| F4-4 | Recursive Draftingサイクル | `core/orchestrator.py` | Drafting→Critiquing→Refining→Polishing→Archiving | 高 | | ⬜ |
-| F4-5 | リトライ制御 | `core/orchestrator.py` | attempt管理, ベストスコア強制採用, ログ警告 | 高 | | ⬜ |
-| F4-6 | 承認ゲート制御 | `core/orchestrator.py` | `approval_gate=true` 時にGUI承認待ちシグナル送出 | 中 | | ⬜ |
-| F4-7 | 中断・再開ロジック | `core/orchestrator.py` | `get_resume_point()` からステータス復元 | 高 | | ⬜ |
-| F4-8 | pyqtSignal 定義 | `core/orchestrator.py` | `token_received`, `phase_changed`, `score_updated`, `needs_approval`, `error_occurred`, `bible_updated` | 高 | | ⬜ |
+| F4-1 | `Orchestrator` 状態機械 | `core/orchestrator.py` | Phase遷移管理, `progress.json` 更新 | 高 | | ✅ |
+| F4-2 | Inceptionフロー | `core/orchestrator.py` | キーワード → Writer(Inception役) → Bible生成 | 高 | | ✅ |
+| F4-3 | Structuringフロー | `core/orchestrator.py` | Chapter Planning → Scene Breakdown | 高 | | ✅ |
+| F4-4 | Recursive Draftingサイクル | `core/orchestrator.py` | Drafting→Critiquing→Refining→Polishing→Archiving | 高 | | ✅ |
+| F4-5 | リトライ制御 | `core/orchestrator.py` | attempt管理, ベストスコア強制採用, ログ警告 | 高 | | ✅ |
+| F4-6 | 承認ゲート制御 | `core/orchestrator.py` | `approval_gate=true` 時にGUI承認待ちシグナル送出 | 中 | | ✅ |
+| F4-7 | 中断・再開ロジック | `core/orchestrator.py` | `get_resume_point()` からステータス復元 | 高 | | ✅ |
+| F4-8 | pyqtSignal 定義 | `core/orchestrator.py` | `token_received`, `phase_changed`, `score_updated`, `needs_approval`, `error_occurred`, `bible_updated` | 高 | | ✅ |
+| F4-9 | 各段階TXT出力 | `core/orchestrator.py` | `ch{N}_draft_{attempt}.txt`, `ch{N}_critique_{attempt}.txt`, `ch{N}_polished.txt` を logs/ に保存 | 高 | | ✅ |
+| F4-10 | ノンストップモード | `gui/main_window.py` | Inception完了後・章完了後に次章を自動開始。全章完成で停止 | 高 | | ✅ |
 
 **成果物:**
 
@@ -177,7 +180,7 @@
 
 | # | タスク | 実装ファイル | 詳細 | 優先 | 担当 | 状態 |
 |---|---|---|---|---|---|---|
-| F6-1 | `InceptionDialog` | `gui/inception_dialog.py` | `QWizard` 3ページ, 入力値収集, 完了時Orchestrator呼び出し | 高 | | ⬜ |
+| F6-1 | `InceptionDialog` | `gui/inception_dialog.py` | `QDialog` 単一テキスト入力, テンプレートコピーボタン, 完了時Orchestrator呼び出し | 高 | | ⬜ |
 | F6-2 | `ProjectPanel` | `gui/project_panel.py` | `QTreeWidget`, 章ステータスのアイコン表示, クリックで章プレビュー | 中 | | ⬜ |
 | F6-3 | `PreviewPanel` | `gui/preview_panel.py` | `QTextEdit` readonly, `token_received` スロットでストリーミング追記 | 高 | | ⬜ |
 | F6-4 | `BibleViewer` | `gui/log_panel.py` 内 | `project_bible.json` をツリー表示, 更新時に自動リフレッシュ | 中 | | ⬜ |
